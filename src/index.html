@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<ul id="messages"></ul>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js" integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k" crossorigin="anonymous"></script>
+
+<script>
+    var socket = io("http://localhost:4000");
+    var messages = document.getElementById('messages');
+    socket.on("SERVER:NEW_MESSAGE", function(msg) {
+        var item = document?.createElement('li');
+        item.textContent = msg;
+        messages?.appendChild(item);
+        window.scrollTo(0, document?.body.scrollHeight);
+    });
+</script>
+</body>
+</html>
