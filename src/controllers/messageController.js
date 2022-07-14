@@ -35,11 +35,14 @@ class MessageController {
       .populate(["dialog", "user", "attachments"])
       .exec((err, messages) => {
         if (err) {
-          return res.status(404).json({ message: "Message not found" });
+          return res.status(404).json({ message: "Сообщение не найдено" });
         }
         Dialog.findOne({ _id: dialogId })
           .populate(["author", "partner"])
           .exec((err, dialog) => {
+            if (err) {
+              return res.status(404).json({ message: "Сообщение не найдено" });
+            }
             const filterMessages = messages.filter((message) => {
               if (
                 dialog &&
@@ -112,7 +115,7 @@ class MessageController {
       if (err || !message) {
         return res.status(404).json({
           status: "error",
-          message: "Message not found",
+          message: "Сообщение не найдено",
         });
       }
       if (message.user.toString() === userId) {
@@ -125,8 +128,18 @@ class MessageController {
             {},
             { sort: { createdAt: -1 } },
             (err, lastMessage) => {
+              if (err) {
+                return res
+                  .status(404)
+                  .json({ message: "Сообщение не найдено" });
+              }
               if (!lastMessage) {
                 Dialog.findById(dialogId, (err, dialog) => {
+                  if (err) {
+                    return res
+                      .status(404)
+                      .json({ message: "Диалог не найден" });
+                  }
                   if (dialog) {
                     dialog.remove(() => {
                       this.io.emit("SERVER:DIALOG_DELETED", dialogId);
@@ -147,7 +160,7 @@ class MessageController {
                         if (err) {
                           return res
                             .status(404)
-                            .json({ message: "Message not found" });
+                            .json({ message: "Сообщение не найдено" });
                         }
                         const filterMessages = messages.filter((message) => {
                           if (
@@ -190,7 +203,7 @@ class MessageController {
                             .then(() => {
                               Dialog.findById(dialogId, (err, dialog) => {
                                 if (err) {
-                                  res.status(500).json({
+                                  return res.status(500).json({
                                     status: "error",
                                     message: err,
                                   });
@@ -202,16 +215,17 @@ class MessageController {
                                   });
                                 }
                                 dialog.lastMessage = lastMessage;
-                                dialog.save();
-                                this.io.emit("SERVER:MESSAGE_DELETED", {
-                                  authorId: authorId,
-                                  messageId: messageId,
-                                  lastMessage: lastMessage,
-                                });
-                                return res.json({
-                                  status: "success",
-                                  message: "Message deleted",
-                                  lastMessage: lastMessage,
+                                dialog.save(() => {
+                                  this.io.emit("SERVER:MESSAGE_DELETED", {
+                                    authorId: authorId,
+                                    messageId: messageId,
+                                    lastMessage: lastMessage,
+                                  });
+                                  return res.json({
+                                    status: "success",
+                                    message: "Message deleted",
+                                    lastMessage: lastMessage,
+                                  });
                                 });
                               });
                             });

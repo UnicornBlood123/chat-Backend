@@ -145,6 +145,7 @@ class DialogController {
                 message.authorDeletedMessage = true;
                 message.save();
               });
+              this.io.emit("SERVER:DIALOG_DELETED", id);
             });
         }
         if (authorId === dialog.partner._id.toString()) {
@@ -161,38 +162,35 @@ class DialogController {
                 message.partnerDeletedMessage = true;
                 message.save();
               });
+              this.io.emit("SERVER:DIALOG_DELETED", id);
             });
         }
         if (dialog.partnerDeletedDialog && dialog.authorDeletedDialog) {
-          Message.find({ dialog: id }).exec((err, messages) => {
+          dialog.remove((err) => {
             if (err) {
-              return res
-                .status(404)
-                .json({ message: "Сообщения в диалоге не найдены" });
+              return res.status(404).json({ message: "Диалог не найден" });
             }
-            messages.forEach((message) => {
-              message.remove();
-            });
+            Message.deleteMany({ dialog: id })
+              .then(() => {
+                this.io.emit("SERVER:DIALOG_DELETED", id);
+                return res.status(200).json({
+                  status: "success",
+                  message: "Диалог удалён",
+                });
+              })
+              .catch((err) => console.log(err));
           });
+        } else {
           dialog
-            .remove()
-            .then(() => {
-              return res.status(200).json({
+            .save()
+            .then(() =>
+              res.status(200).json({
                 status: "success",
-                message: "Диалог полностью удалён",
-              });
-            })
+                message: "Диалог удалён",
+              })
+            )
             .catch((reason) => res.json(reason));
         }
-        dialog
-          .save()
-          .then(() => {
-            return res.status(200).json({
-              status: "success",
-              message: "Диалог удалён",
-            });
-          })
-          .catch((reason) => res.json(reason));
       } else {
         return res.status(404).json({
           status: "error",
