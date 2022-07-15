@@ -239,7 +239,7 @@ class MessageController {
       } else {
         return res.status(403).json({
           status: "error",
-          message: "Not have permission",
+          message: "Нет разрешения",
         });
       }
     });

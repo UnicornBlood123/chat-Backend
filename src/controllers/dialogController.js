@@ -143,7 +143,6 @@ class DialogController {
               }
               messages.forEach((message) => {
                 message.authorDeletedMessage = true;
-                message.save();
               });
               this.io.emit("SERVER:DIALOG_DELETED", id);
             });
@@ -160,7 +159,6 @@ class DialogController {
               }
               messages.forEach((message) => {
                 message.partnerDeletedMessage = true;
-                message.save();
               });
               this.io.emit("SERVER:DIALOG_DELETED", id);
             });
